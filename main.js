@@ -17,16 +17,21 @@ const purchaseList = [
     new Product('acrylicVarnish', 1, true, 125,),
 ];
 
-const purchaseListActions = {
-    calcAmount (list) {
-        list.forEach(element => {
+class PurchaseListActions {
+    constructor(purchaseList) {
+        this.purchaseList = purchaseList;
+    }
+
+    calcAmount() {
+        this.purchaseList.forEach(element => {
             element.amount = element.quantity * element.price;
         });
-    },
+        return this.purchaseList;
+    }
 
-    findProductIndex (list, productName) {
-        return list.findIndex(item => item.productName === productName);
-    },
+    findProductIndex (productName) {
+        return this.purchaseList.findIndex(item => item.productName === productName);
+    }
 
     validateProductName(productName) {
         if (!productName) {
@@ -34,30 +39,30 @@ const purchaseListActions = {
             return false;
         }
         return true;
-    },
+    }
 
-    sortByPurchaseListStatus(list) {
-        return list.sort((a, b) => a.bought - b.bought);
-    },
+    sortByPurchaseListStatus() {
+        return this.purchaseList.sort((a, b) => a.bought - b.bought);
+    }
 
-    changeOfPurchaseStatus(list, product) {
+    changeOfPurchaseStatus(product) {
         if (!this.validateProductName(product)) return;
 
-        let idx = this.findProductIndex(list, product);
+        let idx = this.findProductIndex(product);
     
         if (idx === -1) {
             alert(`There is no such product in the list`);
             return;
         };
-        list[idx].bought = true;       
-    },
+        this.purchaseList[idx].bought = true;       
+    }
 
-    removeProductFromNewList(list, newList, product) {
+    removeProductFromNewList(newList, product) {
         if (!this.validateProductName(product)) return;
 
-        newList = list.slice();
+        newList = this.purchaseList.slice();
         
-        let idx = this.findProductIndex(newList, product);
+        let idx = this.findProductIndex(product);
     
         if (idx === -1) {
             alert(`There is no such product in the list`);
@@ -65,67 +70,66 @@ const purchaseListActions = {
         } 
         newList.splice([idx], 1);
         console.log(newList);
-    },
+    }
 
-    addProductToPurchaseList (list, addProduct) {
+    addProductToPurchaseList (addProduct) {
         if (!this.validateProductName(addProduct)) return;
 
-        let idx = this.findProductIndex(list, addProduct);
+        let idx = this.findProductIndex(this.purchaseList, addProduct);
         
         if (idx === -1) {
             let addQuantity = Number(prompt(`Enter the quantity:`));
             let addBouth = confirm(`Have you already bought this product?`);
             let addPrice = Number(prompt(`What is the price of this product?`));
-            list.push(new Product(addProduct, addQuantity, addBouth, addPrice));
+            this.purchaseList.push(new Product(addProduct, addQuantity, addBouth, addPrice));
         } else {
-            list[idx].quantity ++;
+            this.purchaseList[idx].quantity ++;
         }  
 
-        this.calcAmount(list);
-        return list;
-    },
+        this.calcAmount(this.purchaseList);
+        return this.purchaseList;
+    }
 
-    calcTotalAmount(list) {
+    calcTotalAmount(list = this.purchaseList) {
         let totalAmount = list.reduce((sum, current) => sum + (current.quantity * current.price), 0);
         return totalAmount;
-    },
+    }
 
-    calcTotalByStatus (list, status) {
-        let filteredList = list.filter(({bought}) => bought === status);
+    calcTotalByStatus (status) {
+        let filteredList = this.purchaseList.filter(({bought}) => bought === status);
         return this.calcTotalAmount(filteredList);
-    },
+    }
 
-    showSortedListFrom (list, respond = true) {
-        return list.sort((a, b) => {
+    showSortedListFrom (respond = true) {
+        return this.purchaseList.sort((a, b) => {
             return respond ? b.amount - a.amount : a.amount - b.amount;
         });
-    },
+    }
 }
 
-purchaseListActions.calcAmount(purchaseList);
-console.log(purchaseList);
+const mainListActions = new PurchaseListActions(purchaseList);
+console.log(mainListActions.calcAmount());
 
-let sortedListByStatus = purchaseList.slice();
-purchaseListActions.sortByPurchaseListStatus(sortedListByStatus);
-console.log(sortedListByStatus);
+let sortedListByStatus = new PurchaseListActions(purchaseList.slice());
+console.log(sortedListByStatus.sortByPurchaseListStatus());
 
 let boughtProduct = prompt(`Enter the purchased product to change the status`);
-purchaseListActions.changeOfPurchaseStatus(purchaseList, boughtProduct);
+mainListActions.changeOfPurchaseStatus(boughtProduct);
 
 let newPurchaseList;
 let removeProduct = prompt(`Enter the product to be removed`);
-purchaseListActions.removeProductFromNewList(purchaseList, newPurchaseList, removeProduct);
+mainListActions.removeProductFromNewList(newPurchaseList, removeProduct);
 
 let addProductToList = prompt(`Enter the product to be added`);
-console.log(purchaseListActions.addProductToPurchaseList(purchaseList, addProductToList));
+console.log(mainListActions.addProductToPurchaseList(addProductToList));
 
-let amountToPayAll = purchaseListActions.calcTotalAmount(purchaseList);
+let amountToPayAll = mainListActions.calcTotalAmount();
 console.log(`Amount to pay for all products: ${amountToPayAll}`);
 
-let totalPurchased = purchaseListActions.calcTotalByStatus(purchaseList, true);
-let totalNotPurchased = purchaseListActions.calcTotalByStatus(purchaseList, false);
+let totalPurchased = mainListActions.calcTotalByStatus(true);
+let totalNotPurchased = mainListActions.calcTotalByStatus(false);
 console.log(`Total amount of purchased products: ${totalPurchased}`);
 console.log(`Total amount of unpurchased products: ${totalNotPurchased}`);
 
 let sortByDescending = confirm(`Sort the list from largest to smallest?`);
-console.log(purchaseListActions.showSortedListFrom(purchaseList, sortByDescending)); 
+console.log(mainListActions.showSortedListFrom(sortByDescending)); 
